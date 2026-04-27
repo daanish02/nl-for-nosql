@@ -1,0 +1,17 @@
+[project]
+name = "nl-for-nosql"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=1.2.15",
+    "langchain-mongodb>=0.11.0",
+    "langchain-openai>=1.2.1",
+    "langgraph>=1.1.9",
+    "langgraph-checkpoint-mongodb>=0.3.1",
+    "langgraph-store-mongodb>=0.2.0",
+    "pymongo>=4.15.5",
+    "python-dotenv>=1.2.2",
+    "streamlit>=1.56.0",
+]

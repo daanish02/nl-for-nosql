@@ -1,3 +1,4 @@
+from bson import ObjectId
 from langchain_core.tools import tool
 from langchain_mongodb.retrievers.full_text_search import (
     MongoDBAtlasFullTextSearchRetriever,
@@ -19,7 +20,10 @@ def plot_search(user_query: str) -> str:
     results = retriever.invoke(user_query)
 
     context = "\n\n".join(
-        [f"{doc.metadata['title']}: {doc.page_content}" for doc in results]
+        [
+            f"[Movie ID: {doc.metadata.get('_id', 'Unknown')}] {doc.metadata.get('title', 'Unknown Title')}: {doc.page_content}"
+            for doc in results
+        ]
     )
     return context
 
@@ -40,10 +44,33 @@ def title_search(user_query: str) -> str:
 
     for doc in results:
         if doc:
-            return doc.metadata["fullplot"]
+            movie_id = doc.metadata.get("_id", "Unknown")
+            return f"[Movie ID: {movie_id}]\nPlot: {doc.metadata.get('fullplot', 'No additional plot details available.')}"
         else:
             return "Movie not found"
 
+    return "Movie not found"
 
-# List of search tools
-SEARCH_TOOLS = [plot_search, title_search]
+
+@tool
+def get_movie_details(movie_id: str) -> str:
+    """
+    Retrieve all available detailed information (cast, directors, genres, ratings, etc.) for a specific movie using its exact ID. \nUse this tool when you need more details about a movie after finding its ID from title_search or plot_search.
+    """
+    try:
+        if len(movie_id) == 24:
+            query_id = ObjectId(movie_id)
+        else:
+            query_id = movie_id
+
+        movie = collection.find_one({"_id": query_id})
+
+        if movie:
+            movie["_id"] = str(movie["_id"])
+            return str(movie)
+        return "Movie details not found for the given exact ID."
+    except Exception as e:
+        return f"Error retrieving movie details: {str(e)}"
+
+
+SEARCH_TOOLS = [plot_search, title_search, get_movie_details]
